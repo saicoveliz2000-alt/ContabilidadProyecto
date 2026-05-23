@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Contable — EL ÉXITO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4eee1; --paper-2:#fbf7ee; --ink:#163a2e; --ink-soft:#3a5a4d;
+    --line:#d8cdb6; --line-soft:#e7ddc8; --accent:#9c5b1f; --accent-2:#b9842f;
+    --pos:#2f7d4f; --neg:#a8392a; --shadow:rgba(22,58,46,.12);
+    --debe:#244c3c; --haber:#7a3b18;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'IBM Plex Sans',sans-serif; color:var(--ink);
+    background:
+      radial-gradient(circle at 12% -10%, #fbf6ea 0%, transparent 45%),
+      radial-gradient(circle at 100% 0%, #f0e7d3 0%, transparent 40%),
+      var(--paper);
+    background-attachment:fixed; min-height:100vh; line-height:1.5;
+  }
+  .num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 22px 80px}
+
+  /* Header */
+  header{
+    border-bottom:3px double var(--ink); margin-bottom:6px;
+    padding:30px 0 18px; position:relative;
+  }
+  header .eyebrow{font-size:.72rem; letter-spacing:.32em; text-transform:uppercase; color:var(--accent); font-weight:600}
+  header h1{
+    font-family:'Fraunces',serif; font-weight:900; font-size:clamp(2rem,5vw,3.4rem);
+    line-height:.96; letter-spacing:-.01em; margin:4px 0 2px;
+  }
+  header h1 .ed{outline:none; border-radius:4px; padding:0 4px}
+  header h1 .ed:focus{background:#fff; box-shadow:0 0 0 2px var(--accent-2)}
+  header .sub{color:var(--ink-soft); font-size:.95rem}
+  header .sub span[contenteditable]:focus{background:#fff; outline:none; box-shadow:0 0 0 2px var(--accent-2); border-radius:3px}
+
+  /* Tabs */
+  nav.tabs{display:flex; flex-wrap:wrap; gap:2px; margin:18px 0 4px}
+  nav.tabs button{
+    font-family:'IBM Plex Sans'; font-size:.86rem; font-weight:600; letter-spacing:.02em;
+    border:1px solid var(--line); border-bottom:none; background:#efe6d3; color:var(--ink-soft);
+    padding:11px 20px; cursor:pointer; border-radius:9px 9px 0 0; transition:.18s;
+  }
+  nav.tabs button:hover{background:#f6efe0; color:var(--ink)}
+  nav.tabs button.active{background:var(--paper-2); color:var(--ink); border-color:var(--ink); box-shadow:0 -2px 0 var(--accent) inset}
+
+  /* Toolbar */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    background:var(--paper-2); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:12px 14px; margin-bottom:22px;
+  }
+  .toolbar .grow{flex:1}
+  .btn{
+    font-family:'IBM Plex Sans'; font-weight:600; font-size:.82rem; cursor:pointer;
+    border:1px solid var(--ink); background:#fff; color:var(--ink); padding:9px 15px;
+    border-radius:8px; transition:.15s; display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn:hover{background:var(--ink); color:var(--paper-2)}
+  .btn.primary{background:var(--ink); color:var(--paper-2)}
+  .btn.primary:hover{background:var(--accent)}
+  .btn.ghost{background:transparent; border-color:var(--line); color:var(--ink-soft)}
+  .btn.ghost:hover{background:#efe6d3; color:var(--ink)}
+  .btn.danger{border-color:var(--neg); color:var(--neg); background:transparent}
+  .btn.danger:hover{background:var(--neg); color:#fff}
+  .btn.sm{padding:5px 10px; font-size:.74rem}
+
+  .panel{display:none}
+  .panel.active{display:block; animation:fade .35s ease}
+  @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+
+  .sheet-title{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.5rem;
+    display:flex; align-items:baseline; gap:12px; margin-bottom:3px;
+  }
+  .sheet-title small{font-family:'IBM Plex Sans'; font-size:.8rem; color:var(--ink-soft); font-weight:400; letter-spacing:.04em}
+  .sheet-sub{color:var(--ink-soft); font-size:.85rem; margin-bottom:18px}
+
+  /* Diario partidas */
+  .partida{
+    background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:6px; margin-bottom:16px; overflow:hidden; box-shadow:0 1px 3px var(--shadow);
+  }
+  .partida-head{
+    display:flex; align-items:center; gap:10px; padding:10px 14px;
+    background:#f0e7d3; border-bottom:1px solid var(--line);
+  }
+  .pd-no{font-family:'Fraunces',serif; font-weight:900; font-size:1.05rem; color:var(--ink)}
+  .pd-date{font-size:.78rem; color:var(--ink-soft); letter-spacing:.03em}
+  .pd-actions{margin-left:auto; display:flex; gap:6px}
+  table.tdiario{width:100%; border-collapse:collapse; font-size:.88rem}
+  table.tdiario td{padding:5px 14px; border-bottom:1px dotted var(--line-soft)}
+  table.tdiario tr:last-child td{border-bottom:none}
+  table.tdiario .c-cuenta{width:auto}
+  table.tdiario .c-parcial{color:var(--ink-soft); font-size:.78rem; text-align:right; white-space:nowrap}
+  table.tdiario .c-amt{text-align:right; width:135px; white-space:nowrap}
+  table.tdiario td.haber-acct{padding-left:42px; color:var(--haber)}
+  table.tdiario td.debe-acct{color:var(--debe); font-weight:500}
+  .pd-concepto{padding:8px 14px; font-size:.8rem; font-style:italic; color:var(--ink-soft); background:#faf5ea; border-top:1px dashed var(--line)}
+  .pd-sumas{display:flex; justify-content:flex-end; gap:0; background:#f0e7d3; border-top:1px solid var(--line); font-size:.82rem; font-weight:600}
+  .pd-sumas .lbl{padding:7px 14px; color:var(--ink-soft)}
+  .pd-sumas .v{width:135px; text-align:right; padding:7px 14px}
+
+  /* Generic ledger table */
+  table.led{width:100%; border-collapse:collapse; font-size:.86rem; background:var(--paper-2); border:1px solid var(--ink); border-radius:6px; overflow:hidden}
+  table.led thead th{
+    background:var(--ink); color:var(--paper-2); font-weight:600; font-size:.74rem;
+    letter-spacing:.06em; text-transform:uppercase; padding:10px 14px; text-align:left;
+  }
+  table.led thead th.r{text-align:right}
+  table.led tbody td{padding:8px 14px; border-bottom:1px solid var(--line-soft)}
+  table.led tbody tr:nth-child(even){background:#faf5ea}
+  table.led td.r{text-align:right}
+  table.led tfoot td{padding:11px 14px; border-top:2px solid var(--ink); font-weight:700; background:#f0e7d3}
+  table.led tfoot td.r{text-align:right}
+
+  /* Mayor — T accounts */
+  .mayor-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px}
+  .taccount{background:var(--paper-2); border:1px solid var(--line); border-radius:6px; overflow:hidden; box-shadow:0 1px 3px var(--shadow)}
+  .taccount h4{font-family:'Fraunces',serif; font-weight:600; font-size:1rem; padding:9px 13px; background:#f0e7d3; border-bottom:2px solid var(--ink)}
+  .taccount h4 .tag{font-family:'IBM Plex Sans'; font-size:.62rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); float:right; margin-top:4px}
+  .t-cols{display:grid; grid-template-columns:1fr 1fr}
+  .t-cols .col-h{font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; font-weight:600; padding:5px 12px; color:var(--ink-soft); border-bottom:1px solid var(--line)}
+  .t-cols .col-h.r,.t-cols .col-h.l{}
+  .t-cols .col:first-child{border-right:1px solid var(--line)}
+  .t-mov{padding:3px 12px; text-align:right; font-size:.82rem; border-bottom:1px dotted var(--line-soft)}
+  .t-total{padding:6px 12px; text-align:right; font-weight:600; font-size:.82rem; border-top:1px solid var(--ink); background:#faf5ea}
+  .t-saldo{padding:7px 13px; font-size:.8rem; font-weight:600; background:#f0e7d3; border-top:2px solid var(--ink); display:flex; justify-content:space-between}
+  .t-saldo .num{color:var(--ink)}
+
+  /* Dashboard */
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:12px; margin-bottom:24px}
+  .kpi{background:var(--paper-2); border:1px solid var(--line); border-top:3px solid var(--accent); border-radius:6px; padding:14px 16px; box-shadow:0 1px 3px var(--shadow)}
+  .kpi .k-lbl{font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-soft); font-weight:600}
+  .kpi .k-val{font-family:'Fraunces',serif; font-weight:900; font-size:1.5rem; margin-top:5px; letter-spacing:-.01em}
+  .kpi.green{border-top-color:var(--pos)} .kpi.green .k-val{color:var(--pos)}
+  .kpi.red{border-top-color:var(--neg)} .kpi.red .k-val{color:var(--neg)}
+  .dash-2{display:grid; grid-template-columns:1.1fr .9fr; gap:20px; align-items:start}
+  @media(max-width:760px){.dash-2{grid-template-columns:1fr}}
+  .card{background:var(--paper-2); border:1px solid var(--line); border-radius:6px; padding:16px 18px; box-shadow:0 1px 3px var(--shadow)}
+  .card h3{font-family:'Fraunces',serif; font-weight:600; font-size:1.15rem; margin-bottom:12px}
+  .bar-row{display:grid; grid-template-columns:130px 1fr 96px; align-items:center; gap:10px; margin-bottom:9px; font-size:.82rem}
+  .bar-track{background:#e7ddc8; border-radius:30px; height:13px; overflow:hidden}
+  .bar-fill{height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:30px}
+  .bar-row .num{text-align:right}
+
+  .cuadre{display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:.8rem; padding:4px 11px; border-radius:30px}
+  .cuadre.ok{background:#e3f0e6; color:var(--pos)}
+  .cuadre.bad{background:#f6e3df; color:var(--neg)}
+
+  /* Modal */
+  .overlay{position:fixed; inset:0; background:rgba(22,40,33,.45); backdrop-filter:blur(2px); display:none; align-items:flex-start; justify-content:center; z-index:50; padding:24px 14px; overflow-y:auto}
+  .overlay.open{display:flex}
+  .modal{background:var(--paper-2); border:1px solid var(--ink); border-radius:10px; width:100%; max-width:760px; box-shadow:0 18px 60px rgba(0,0,0,.3); animation:pop .25s ease}
+  @keyframes pop{from{opacity:0; transform:scale(.97) translateY(8px)}to{opacity:1; transform:none}}
+  .modal-head{display:flex; align-items:center; padding:16px 20px; border-bottom:3px double var(--ink)}
+  .modal-head h3{font-family:'Fraunces',serif; font-weight:900; font-size:1.3rem}
+  .modal-head .x{margin-left:auto; cursor:pointer; border:none; background:none; font-size:1.5rem; color:var(--ink-soft); line-height:1}
+  .modal-head .x:hover{color:var(--neg)}
+  .modal-body{padding:18px 20px; max-height:70vh; overflow-y:auto}
+  .field{margin-bottom:14px}
+  .field label{display:block; font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:5px}
+  .field input,.field select,.field textarea{
+    width:100%; font-family:'IBM Plex Sans'; font-size:.9rem; color:var(--ink);
+    border:1px solid var(--line); background:#fff; border-radius:7px; padding:9px 11px;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(156,91,31,.15)}
+  .row2{display:grid; grid-template-columns:1fr 1.4fr; gap:12px}
+
+  .lines-head{display:grid; grid-template-columns:1fr 96px 116px 116px 34px; gap:8px; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:600; padding:0 2px 4px}
+  .line-row{display:grid; grid-template-columns:1fr 96px 116px 116px 34px; gap:8px; margin-bottom:7px; align-items:center}
+  .line-row input{padding:8px 9px; font-size:.85rem}
+  .line-row .num{text-align:right}
+  .line-row .rm{border:none; background:#f0e7d3; color:var(--neg); border-radius:6px; cursor:pointer; height:36px; font-size:1.1rem; font-weight:700}
+  .line-row .rm:hover{background:var(--neg); color:#fff}
+
+  .totbar{display:grid; grid-template-columns:1fr 96px 116px 116px 34px; gap:8px; margin-top:10px; padding-top:10px; border-top:2px solid var(--ink); font-weight:600; font-size:.85rem}
+  .totbar .num{text-align:right; padding:4px 9px}
+  .totbar .lbl{text-align:right; color:var(--ink-soft); padding:4px 0}
+
+  .iva-box{background:#faf5ea; border:1px dashed var(--accent); border-radius:8px; padding:12px 14px; margin-top:6px}
+  .iva-box .ttl{font-size:.74rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); margin-bottom:8px}
+  .iva-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:end}
+  .iva-grid .out{font-size:.8rem}
+  .iva-grid .out b{font-family:'IBM Plex Mono'; display:block; font-size:1.05rem; color:var(--ink)}
+
+  .modal-foot{display:flex; align-items:center; gap:10px; padding:14px 20px; border-top:1px solid var(--line); background:#f0e7d3; border-radius:0 0 10px 10px}
+  .modal-foot .grow{flex:1}
+
+  .empty{text-align:center; padding:50px 20px; color:var(--ink-soft); border:2px dashed var(--line); border-radius:10px; background:var(--paper-2)}
+  .empty p{margin-bottom:14px}
+
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--ink); color:var(--paper-2); padding:11px 22px; border-radius:30px; font-size:.85rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; transition:.3s; z-index:99}
+  .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+
+  footer{text-align:center; margin-top:40px; font-size:.74rem; color:var(--ink-soft)}
+
+  @media print{
+    .toolbar,nav.tabs,.pd-actions,footer,.no-print{display:none!important}
+    .panel{display:block!important; page-break-inside:avoid}
+    body{background:#fff}
+  }
+  @media(max-width:620px){
+    .row2{grid-template-columns:1fr}
+    .lines-head,.line-row,.totbar{grid-template-columns:1fr 72px 86px 86px 30px; gap:5px}
+    nav.tabs button{padding:9px 13px; font-size:.78rem}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Sistema Contable · Libro Diario</div>
+    <h1><span class="ed" id="empresa" contenteditable="true" spellcheck="false">EL ÉXITO</span></h1>
+    <div class="sub">Propietario: <span id="propietario" contenteditable="true" spellcheck="false">Sr. Pedro Ramírez</span> · Período: <span id="periodo" contenteditable="true" spellcheck="false">Enero 2026</span> · Cifras en Quetzales (IVA 12% incluido)</div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="diario" class="active">Libro Diario</button>
+    <button data-tab="mayor">Libro Mayor</button>
+    <button data-tab="balance">Balance de Saldos</button>
+    <button data-tab="dashboard">Dashboard</button>
+  </nav>
+
+  <div class="toolbar">
+    <button class="btn primary" onclick="openModal()">＋ Nueva partida</button>
+    <span class="grow"></span>
+    <button class="btn ghost sm" onclick="exportJSON()">⭳ Respaldo (JSON)</button>
+    <button class="btn ghost sm" onclick="document.getElementById('imp').click()">⭱ Importar</button>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn ghost sm" onclick="exportCSV()">⭳ CSV Diario</button>
+    <button class="btn ghost sm" onclick="window.print()">🖶 Imprimir</button>
+    <button class="btn danger sm" onclick="resetData()">↺ Restablecer ejemplo</button>
+  </div>
+
+  <!-- DIARIO -->
+  <section class="panel active" id="panel-diario">
+    <div class="sheet-title">Libro Diario <small id="d-count"></small></div>
+    <div class="sheet-sub">Registro cronológico de operaciones · cada partida debe cuadrar (Debe = Haber).</div>
+    <div id="diario-list"></div>
+  </section>
+
+  <!-- MAYOR -->
+  <section class="panel" id="panel-mayor">
+    <div class="sheet-title">Libro Mayor <small>Cuentas T</small></div>
+    <div class="sheet-sub">Mayorización automática de todas las partidas del diario.</div>
+    <div class="mayor-grid" id="mayor-grid"></div>
+  </section>
+
+  <!-- BALANCE -->
+  <section class="panel" id="panel-balance">
+    <div class="sheet-title">Balance de Saldos <small id="b-fecha"></small></div>
+    <div class="sheet-sub">Saldos finales de cada cuenta. La sumatoria de Debe debe igualar a la de Haber.</div>
+    <table class="led" id="balance-table"></table>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="panel" id="panel-dashboard">
+    <div class="sheet-title">Dashboard <small id="dash-periodo"></small></div>
+    <div class="sheet-sub">Indicadores clave y estructura financiera, actualizados en tiempo real.</div>
+    <div class="kpis" id="kpis"></div>
+    <div class="dash-2">
+      <div class="card">
+        <h3>Estructura del Activo</h3>
+        <div id="estructura"></div>
+      </div>
+      <div class="card">
+        <h3>Resumen de Partidas</h3>
+        <table class="led" id="resumen-pd" style="font-size:.78rem"></table>
+      </div>
+    </div>
+  </section>
+
+  <footer>Generado para uso académico · datos guardados localmente en tu navegador.</footer>
+</div>
+
+<!-- MODAL NUEVA / EDITAR PARTIDA -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Nueva partida</h3>
+      <button class="x" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="f-fecha">
+        </div>
+        <div class="field">
+          <label>Concepto / descripción</label>
+          <input type="text" id="f-concepto" placeholder="Ej. Compra de mercadería al contado (IVA incluido)">
+        </div>
+      </div>
+
+      <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:6px;display:block">Movimientos · usa la columna <b>Haber</b> para las cuentas acreedoras ("a ...")</label>
+      <div class="lines-head">
+        <div>Cuenta</div><div>Parcial</div><div>Debe (Q)</div><div>Haber (Q)</div><div></div>
+      </div>
+      <div id="lines"></div>
+      <button class="btn ghost sm" style="margin-top:6px" onclick="addLine()">＋ Agregar línea</button>
+
+      <div class="totbar">
+        <div class="lbl">Sumas iguales →</div>
+        <div></div>
+        <div class="num" id="tot-debe">0.00</div>
+        <div class="num" id="tot-haber">0.00</div>
+        <div></div>
+      </div>
+      <div style="margin-top:8px" id="cuadre-msg"></div>
+
+      <div class="iva-box">
+        <div class="ttl">🧮 Calculadora IVA incluido (Guatemala)</div>
+        <div class="iva-grid">
+          <div class="field" style="margin:0">
+            <label>Monto con IVA (Q)</label>
+            <input type="number" id="iva-in" class="num" placeholder="20000" oninput="calcIVA()">
+          </div>
+          <div class="out">Base (÷1.12)<b id="iva-base">—</b></div>
+          <div class="out">IVA (12%)<b id="iva-val">—</b></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--ink-soft);margin-top:6px">Base = monto ÷ 1.12 · IVA = monto − base. Copia los valores a tus líneas de Compras/Ventas e IVA.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span id="edit-flag" class="grow" style="font-size:.78rem;color:var(--ink-soft)"></span>
+      <button class="btn ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn primary" id="save-btn" onclick="savePartida()">Guardar partida</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- catálogo base de cuentas (tipo: activo|pasivo|capital|ingreso|gasto) ---------- */
+const CATALOGO = {
+  "Caja y Bancos":"activo","Mercaderías":"activo","Clientes":"activo",
+  "Mobiliario y Equipo":"activo","Vehículo de Reparto":"activo","IVA":"activo",
+  "Proveedores":"pasivo","Documentos por Pagar":"pasivo","Capital":"capital",
+  "Ventas":"ingreso","Compras":"gasto","Viáticos":"gasto","Alquileres":"gasto",
+  "Propaganda":"gasto","Agua, Luz y Teléfono":"gasto"
+};
+
+/* ---------- datos de ejemplo (tu Excel) ---------- */
+function ejemplo(){
+  const L=(cuenta,debe,haber,parcial="")=>({cuenta,parcial,debe,haber});
+  return {
+    empresa:"EL ÉXITO", propietario:"Sr. Pedro Ramírez", periodo:"Enero 2026",
+    catalogo:{...CATALOGO},
+    partidas:[
+      {fecha:"2026-01-01",concepto:"Aporte inicial del Sr. Pedro Ramírez",lineas:[
+        L("Caja y Bancos",100000,0),L("Mercaderías",80000,0),L("Capital",0,180000)]},
+      {fecha:"2026-01-05",concepto:"Compra de mercadería al contado (IVA incluido)",lineas:[
+        L("Compras",17857.14,0),L("IVA",2142.86,0),L("Caja y Bancos",0,20000)]},
+      {fecha:"2026-01-10",concepto:"Compra mercadería al crédito, IVA al contado",lineas:[
+        L("Compras",13392.86,0),L("IVA",1607.14,0),L("Proveedores",0,13392.86),L("Caja y Bancos",0,1607.14)]},
+      {fecha:"2026-01-15",concepto:"Compra de mobiliario para el almacén",lineas:[
+        L("Mobiliario y Equipo",5357.14,0),L("IVA",642.86,0),L("Caja y Bancos",0,6000)]},
+      {fecha:"2026-01-16",concepto:"Venta de mercadería al contado (IVA incluido)",lineas:[
+        L("Caja y Bancos",4500,0),L("Ventas",0,4017.86),L("IVA",0,482.14)]},
+      {fecha:"2026-01-17",concepto:"Venta al crédito, IVA al contado",lineas:[
+        L("Clientes",4464.29,0),L("Caja y Bancos",535.71,0),L("Ventas",0,4464.29),L("IVA",0,535.71)]},
+      {fecha:"2026-01-18",concepto:"Compra vehículo: 50% efectivo, 50% en 6 letras (IVA incl.)",lineas:[
+        L("Vehículo de Reparto",26785.71,0),L("IVA",3214.29,0),L("Caja y Bancos",0,15000),L("Documentos por Pagar",0,15000)]},
+      {fecha:"2026-01-20",concepto:"Ventas Q11,000: 40% contado, 60% crédito, IVA contado (IVA incl.)",lineas:[
+        L("Caja y Bancos",5107.14,0,"Contado 40% + IVA total"),L("Clientes",5892.86,0,"Crédito 60%"),L("Ventas",0,9821.43),L("IVA",0,1178.57)]},
+      {fecha:"2026-01-21",concepto:"Pago de viáticos a vendedores",lineas:[
+        L("Viáticos",500,0),L("Caja y Bancos",0,500)]},
+      {fecha:"2026-01-25",concepto:"Pago de gastos de fin de mes",lineas:[
+        L("Alquileres",1000,0),L("Propaganda",3000,0),L("Agua, Luz y Teléfono",800,0),L("Caja y Bancos",0,4800)]},
+      {fecha:"2026-01-27",concepto:"Pago de letra de cambio del vehículo",lineas:[
+        L("Documentos por Pagar",2500,0),L("Caja y Bancos",0,2500)]}
+    ]
+  };
+}
+
+/* ---------- persistencia (con respaldo en memoria si no hay localStorage) ---------- */
+const KEY="contabilidad_elexito_v1";
+let mem=null;
+function load(){
+  try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){}
+  if(mem) return mem;
+  return ejemplo();
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){mem=state;}
+}
+let state=load();
+if(!state.catalogo) state.catalogo={...CATALOGO};
+
+/* ---------- utilidades ---------- */
+const Q=n=>"Q "+ (Math.round((n+Number.EPSILON)*100)/100).toLocaleString("es-GT",{minimumFractionDigits:2,maximumFractionDigits:2});
+const N=n=>(Math.round((n+Number.EPSILON)*100)/100).toLocaleString("es-GT",{minimumFractionDigits:2,maximumFractionDigits:2});
+const r2=n=>Math.round((n+Number.EPSILON)*100)/100;
+function fechaCorta(iso){if(!iso)return"—"; const[y,m,d]=iso.split("-"); return `${d}/${m}/${y}`;}
+function toast(msg){const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200);}
+
+/* ---------- header editable ---------- */
+["empresa","propietario","periodo"].forEach(id=>{
+  const el=document.getElementById(id);
+  el.textContent=state[id]||el.textContent;
+  el.addEventListener("blur",()=>{state[id]=el.textContent.trim(); save(); renderAll();});
+});
+
+/* ---------- tabs ---------- */
+document.querySelectorAll("nav.tabs button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById("panel-"+b.dataset.tab).classList.add("active");
+  };
+});
+
+/* ===================== RENDER ===================== */
+function renderAll(){renderDiario(); renderMayor(); renderBalance(); renderDashboard();}
+
+function renderDiario(){
+  const cont=document.getElementById("diario-list");
+  document.getElementById("d-count").textContent=`(${state.partidas.length} partidas)`;
+  if(!state.partidas.length){
+    cont.innerHTML=`<div class="empty"><p>Aún no hay partidas registradas.</p><button class="btn primary" onclick="openModal()">＋ Registrar la primera partida</button></div>`;
+    return;
+  }
+  cont.innerHTML=state.partidas.map((p,i)=>{
+    const td=r2(p.lineas.reduce((s,l)=>s+(+l.debe||0),0));
+    const th=r2(p.lineas.reduce((s,l)=>s+(+l.haber||0),0));
+    const cuadra=Math.abs(td-th)<0.01;
+    const filas=p.lineas.map(l=>{
+      const esHaber=(+l.haber||0)>0;
+      const nombre=esHaber?("a "+l.cuenta):l.cuenta;
+      return `<tr>
+        <td class="c-cuenta ${esHaber?'haber-acct':'debe-acct'}">${nombre}</td>
+        <td class="c-parcial">${l.parcial||""}</td>
+        <td class="c-amt num">${(+l.debe||0)>0?N(l.debe):""}</td>
+        <td class="c-amt num">${esHaber?N(l.haber):""}</td>
+      </tr>`;
+    }).join("");
+    return `<div class="partida">
+      <div class="partida-head">
+        <span class="pd-no">P.D. No. ${i+1}</span>
+        <span class="pd-date">${fechaCorta(p.fecha)}</span>
+        <span class="pd-actions no-print">
+          <button class="btn ghost sm" onclick="editPartida(${i})">Editar</button>
+          <button class="btn danger sm" onclick="delPartida(${i})">Eliminar</button>
+        </span>
+      </div>
+      <table class="tdiario"><tbody>${filas}</tbody></table>
+      <div class="pd-concepto">${p.concepto||""}</div>
+      <div class="pd-sumas">
+        <span class="lbl">Sumas iguales</span>
+        <span class="v num">${N(td)}</span>
+        <span class="v num">${N(th)}</span>
+      </div>
+      ${cuadra?"":'<div style="padding:6px 14px;background:#f6e3df;color:var(--neg);font-size:.78rem;font-weight:600">⚠ Esta partida no cuadra</div>'}
+    </div>`;
+  }).join("");
+}
+
+/* saldos por cuenta */
+function calcularCuentas(){
+  const m={};
+  state.partidas.forEach(p=>p.lineas.forEach(l=>{
+    if(!l.cuenta) return;
+    if(!m[l.cuenta]) m[l.cuenta]={debe:0,haber:0};
+    m[l.cuenta].debe+=(+l.debe||0); m[l.cuenta].haber+=(+l.haber||0);
+  }));
+  // orden de aparición
+  const orden=[]; state.partidas.forEach(p=>p.lineas.forEach(l=>{if(l.cuenta&&!orden.includes(l.cuenta))orden.push(l.cuenta);}));
+  return {m,orden};
+}
+
+function renderMayor(){
+  const {m,orden}=calcularCuentas();
+  const g=document.getElementById("mayor-grid");
+  if(!orden.length){g.innerHTML='<div class="empty"><p>Sin movimientos todavía.</p></div>'; return;}
+  g.innerHTML=orden.map(c=>{
+    const movs=[];
+    state.partidas.forEach(p=>p.lineas.forEach(l=>{if(l.cuenta===c)movs.push({d:+l.debe||0,h:+l.haber||0});}));
+    const td=r2(m[c].debe), th=r2(m[c].haber), saldo=r2(td-th);
+    const tipo=state.catalogo[c]||"—";
+    const filasD=movs.map(x=>`<div class="t-mov num">${x.d>0?N(x.d):"&nbsp;"}</div>`).join("");
+    const filasH=movs.map(x=>`<div class="t-mov num">${x.h>0?N(x.h):"&nbsp;"}</div>`).join("");
+    return `<div class="taccount">
+      <h4>${c}<span class="tag">${tipo}</span></h4>
+      <div class="t-cols">
+        <div class="col"><div class="col-h">Debe</div>${filasD}<div class="t-total num">${N(td)}</div></div>
+        <div class="col"><div class="col-h r">Haber</div>${filasH}<div class="t-total num">${N(th)}</div></div>
+      </div>
+      <div class="t-saldo"><span>Saldo ${saldo>=0?"deudor":"acreedor"}</span><span class="num">${N(Math.abs(saldo))}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function renderBalance(){
+  const {m,orden}=calcularCuentas();
+  document.getElementById("b-fecha").textContent=`Al cierre · ${state.periodo}`;
+  const t=document.getElementById("balance-table");
+  if(!orden.length){t.innerHTML='<tbody><tr><td style="padding:24px;text-align:center;color:var(--ink-soft)">Sin cuentas</td></tr></tbody>'; return;}
+  let tDebe=0,tHaber=0;
+  const rows=orden.map((c,i)=>{
+    const saldo=r2(m[c].debe-m[c].haber);
+    let debe="",haber="";
+    if(saldo>=0){debe=N(saldo); tDebe+=saldo;} else {haber=N(-saldo); tHaber+=-saldo;}
+    return `<tr><td class="num" style="width:40px">${i+1}</td><td>${c}</td><td class="r num">${debe}</td><td class="r num">${haber}</td></tr>`;
+  }).join("");
+  const cuadra=Math.abs(r2(tDebe)-r2(tHaber))<0.01;
+  t.innerHTML=`
+    <thead><tr><th style="width:40px">No.</th><th>Nombre de la cuenta</th><th class="r">Debe</th><th class="r">Haber</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot>
+      <tr><td></td><td>TOTALES</td><td class="r num">${N(tDebe)}</td><td class="r num">${N(tHaber)}</td></tr>
+      <tr><td></td><td colspan="3"><span class="cuadre ${cuadra?'ok':'bad'}">${cuadra?'✓ Cuadra':'✗ No cuadra — diferencia '+N(Math.abs(tDebe-tHaber))}</span></td></tr>
+    </tfoot>`;
+}
+
+function renderDashboard(){
+  const {m,orden}=calcularCuentas();
+  document.getElementById("dash-periodo").textContent=state.periodo;
+  const saldo=c=>m[c]?r2(m[c].debe-m[c].haber):0;
+  let totalAct=0,totalPas=0;
+  orden.forEach(c=>{
+    const tipo=state.catalogo[c]; const s=saldo(c);
+    if(tipo==="activo") totalAct+=s>0?s:0;
+    if(tipo==="pasivo") totalPas+=s<0?-s:0;
+  });
+  const kpis=[
+    {l:"Caja y Bancos",v:saldo("Caja y Bancos")},
+    {l:"Capital",v:Math.abs(saldo("Capital"))},
+    {l:"Ventas Netas",v:Math.abs(saldo("Ventas")),cls:"green"},
+    {l:"Compras Netas",v:saldo("Compras"),cls:"red"},
+    {l:"Total Activos",v:totalAct},
+    {l:"Total Pasivos",v:totalPas,cls:"red"}
+  ];
+  document.getElementById("kpis").innerHTML=kpis.map(k=>
+    `<div class="kpi ${k.cls||''}"><div class="k-lbl">${k.l}</div><div class="k-val num">${Q(k.v)}</div></div>`).join("");
+
+  // estructura del activo
+  const acts=orden.filter(c=>state.catalogo[c]==="activo").map(c=>({c,v:Math.max(saldo(c),0)})).filter(x=>x.v>0);
+  const totAct=acts.reduce((s,a)=>s+a.v,0)||1;
+  document.getElementById("estructura").innerHTML=acts.sort((a,b)=>b.v-a.v).map(a=>{
+    const pct=(a.v/totAct*100);
+    return `<div class="bar-row"><span>${a.c}</span><span class="bar-track"><span class="bar-fill" style="width:${pct.toFixed(1)}%"></span></span><span class="num">${pct.toFixed(1)}%</span></div>`;
+  }).join("")||'<div style="color:var(--ink-soft);font-size:.85rem">Sin activos registrados.</div>';
+
+  // resumen partidas
+  const rp=document.getElementById("resumen-pd");
+  let totDiario=0;
+  const rows=state.partidas.map((p,i)=>{
+    const monto=r2(p.lineas.reduce((s,l)=>s+(+l.debe||0),0));
+    const th=r2(p.lineas.reduce((s,l)=>s+(+l.haber||0),0));
+    totDiario+=monto;
+    const ok=Math.abs(monto-th)<0.01;
+    return `<tr><td class="num">${i+1}</td><td>${fechaCorta(p.fecha)}</td><td>${(p.concepto||"").slice(0,42)}</td><td class="r num">${N(monto)}</td><td class="r">${ok?'✓':'✗'}</td></tr>`;
+  }).join("");
+  rp.innerHTML=`<thead><tr><th>PD</th><th>Fecha</th><th>Concepto</th><th class="r">Monto</th><th class="r">✓</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="5" style="padding:18px;text-align:center;color:var(--ink-soft)">Sin partidas</td></tr>'}</tbody>
+    <tfoot><tr><td colspan="3">TOTAL DIARIO</td><td class="r num">${N(totDiario)}</td><td></td></tr></tfoot>`;
+}
+
+/* ===================== MODAL ===================== */
+let editIndex=-1;
+function cuentaOptions(){
+  return Object.keys(state.catalogo).map(c=>`<option value="${c}">`).join("");
+}
+function lineHTML(l={cuenta:"",parcial:"",debe:"",haber:""}){
+  return `<div class="line-row">
+    <input list="cuentas-dl" placeholder="Cuenta" value="${l.cuenta||''}" data-f="cuenta">
+    <input placeholder="—" value="${l.parcial||''}" data-f="parcial">
+    <input type="number" step="0.01" class="num" placeholder="0.00" value="${l.debe||''}" data-f="debe" oninput="syncTotals()">
+    <input type="number" step="0.01" class="num" placeholder="0.00" value="${l.haber||''}" data-f="haber" oninput="syncTotals()">
+    <button class="rm" onclick="this.parentNode.remove();syncTotals()">×</button>
+  </div>`;
+}
+function addLine(l){document.getElementById("lines").insertAdjacentHTML("beforeend",lineHTML(l)); syncTotals();}
+function readLines(){
+  return [...document.querySelectorAll("#lines .line-row")].map(row=>{
+    const o={}; row.querySelectorAll("[data-f]").forEach(inp=>o[inp.dataset.f]=inp.value);
+    return {cuenta:(o.cuenta||"").trim(),parcial:(o.parcial||"").trim(),debe:+o.debe||0,haber:+o.haber||0};
+  }).filter(l=>l.cuenta||l.debe||l.haber);
+}
+function syncTotals(){
+  const ls=readLines();
+  const td=r2(ls.reduce((s,l)=>s+l.debe,0)), th=r2(ls.reduce((s,l)=>s+l.haber,0));
+  document.getElementById("tot-debe").textContent=N(td);
+  document.getElementById("tot-haber").textContent=N(th);
+  const dif=r2(td-th), cuadra=Math.abs(dif)<0.01 && td>0;
+  const msg=document.getElementById("cuadre-msg");
+  if(td===0&&th===0){msg.innerHTML="";}
+  else if(cuadra){msg.innerHTML='<span class="cuadre ok">✓ La partida cuadra</span>';}
+  else{msg.innerHTML=`<span class="cuadre bad">✗ Diferencia de ${N(Math.abs(dif))} — Debe y Haber deben ser iguales</span>`;}
+  document.getElementById("save-btn").disabled=false;
+}
+function openModal(){
+  editIndex=-1;
+  document.getElementById("modal-title").textContent="Nueva partida";
+  document.getElementById("edit-flag").textContent="";
+  document.getElementById("f-fecha").value=new Date().toISOString().slice(0,10);
+  document.getElementById("f-concepto").value="";
+  document.getElementById("iva-in").value=""; calcIVA();
+  const L=document.getElementById("lines"); L.innerHTML="";
+  addLine(); addLine();
+  ensureDatalist(); syncTotals();
+  document.getElementById("overlay").classList.add("open");
+}
+function editPartida(i){
+  editIndex=i; const p=state.partidas[i];
+  document.getElementById("modal-title").textContent="Editar partida";
+  document.getElementById("edit-flag").textContent="Editando P.D. No. "+(i+1);
+  document.getElementById("f-fecha").value=p.fecha;
+  document.getElementById("f-concepto").value=p.concepto||"";
+  const L=document.getElementById("lines"); L.innerHTML="";
+  p.lineas.forEach(l=>addLine(l));
+  ensureDatalist(); syncTotals();
+  document.getElementById("overlay").classList.add("open");
+}
+function closeModal(){document.getElementById("overlay").classList.remove("open");}
+function ensureDatalist(){
+  let dl=document.getElementById("cuentas-dl");
+  if(!dl){dl=document.createElement("datalist"); dl.id="cuentas-dl"; document.body.appendChild(dl);}
+  dl.innerHTML=cuentaOptions();
+}
+function savePartida(){
+  const fecha=document.getElementById("f-fecha").value;
+  const concepto=document.getElementById("f-concepto").value.trim();
+  const lineas=readLines();
+  if(lineas.length<2){toast("Agrega al menos 2 cuentas (cargo y abono)."); return;}
+  if(lineas.some(l=>!l.cuenta)){toast("Falta el nombre de una cuenta."); return;}
+  const td=r2(lineas.reduce((s,l)=>s+l.debe,0)), th=r2(lineas.reduce((s,l)=>s+l.haber,0));
+  if(Math.abs(td-th)>=0.01){toast("La partida no cuadra: Debe ≠ Haber."); return;}
+  if(td===0){toast("Los montos no pueden ser cero."); return;}
+  if(!concepto){toast("Escribe un concepto para la partida."); return;}
+  // registrar cuentas nuevas en el catálogo
+  lineas.forEach(l=>{if(!(l.cuenta in state.catalogo)) state.catalogo[l.cuenta]= l.haber>0?"pasivo":"gasto";});
+  const partida={fecha,concepto,lineas};
+  if(editIndex>=0) state.partidas[editIndex]=partida; else state.partidas.push(partida);
+  // ordenar por fecha
+  state.partidas.sort((a,b)=>(a.fecha||"").localeCompare(b.fecha||""));
+  save(); renderAll(); closeModal();
+  toast(editIndex>=0?"Partida actualizada ✓":"Partida registrada ✓");
+}
+function delPartida(i){
+  if(!confirm(`¿Eliminar la partida P.D. No. ${i+1}?`)) return;
+  state.partidas.splice(i,1); save(); renderAll(); toast("Partida eliminada");
+}
+function calcIVA(){
+  const v=+document.getElementById("iva-in").value;
+  if(!v){document.getElementById("iva-base").textContent="—"; document.getElementById("iva-val").textContent="—"; return;}
+  const base=v/1.12, iva=v-base;
+  document.getElementById("iva-base").textContent=N(base);
+  document.getElementById("iva-val").textContent=N(iva);
+}
+
+/* ===================== IMPORT / EXPORT / RESET ===================== */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  dl(blob,"contabilidad_"+(state.empresa||"datos").replace(/\s+/g,"_")+".json");
+  toast("Respaldo descargado");
+}
+function importJSON(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result); if(!d.partidas)throw 0; state=d; if(!state.catalogo)state.catalogo={...CATALOGO};
+    ["empresa","propietario","periodo"].forEach(id=>document.getElementById(id).textContent=state[id]||"");
+    save(); renderAll(); toast("Datos importados ✓");}catch(x){toast("Archivo inválido");}};
+  r.readAsText(f); e.target.value="";
+}
+function exportCSV(){
+  let rows=[["PD","Fecha","Cuenta","Parcial","Debe","Haber","Concepto"]];
+  state.partidas.forEach((p,i)=>p.lineas.forEach((l,j)=>{
+    rows.push([i+1,p.fecha,(l.haber>0?"a "+l.cuenta:l.cuenta),l.parcial||"",l.debe||"",l.haber||"",j===0?p.concepto:""]);
+  }));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  dl(new Blob(["\uFEFF"+csv],{type:"text/csv"}),"libro_diario.csv"); toast("CSV descargado");
+}
+function dl(blob,name){const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href);}
+function resetData(){
+  if(!confirm("Esto borrará tus cambios y volverá al ejemplo original. ¿Continuar?")) return;
+  state=ejemplo(); ["empresa","propietario","periodo"].forEach(id=>document.getElementById(id).textContent=state[id]);
+  save(); renderAll(); toast("Restablecido al ejemplo");
+}
+
+/* cerrar modal al click fuera */
+document.getElementById("overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+renderAll();
+</script>
+</body>
+</html>
